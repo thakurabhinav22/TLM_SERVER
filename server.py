@@ -1,30 +1,36 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS  # To handle CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
-# Enable CORS for all routes
-CORS(app)
-
-# Route to accept the POST request and greet the user
-@app.route('/greet', methods=['POST'])
-def greet_user():
+# Route to handle search request
+@app.route('/search', methods=['POST'])
+def search():
     try:
-        # Get JSON data from the request
+        # Get data from the POST request
         data = request.get_json()
+        topic = data.get('topic')
+        author = data.get('author', '')
+        keywords = data.get('keywords', '')
 
-        # Extract the 'name' field from the incoming JSON
-        name = data.get("name")
+        # You can add logic here to process the data and fetch PDF links
+        # For now, let's return a dummy response
+        pdf_links = [
+            f"https://example.com/{topic}_pdf1.pdf",
+            f"https://example.com/{topic}_pdf2.pdf"
+        ]
 
-        if not name:
-            return jsonify({"error": "Name is required"}), 400
-        
-        # Respond with a greeting message
-        greeting_message = f"Hello, {name}! Welcome to the server!"
-        return jsonify({"message": greeting_message}), 200
+        response = {
+            "topic": topic,
+            "pdf_links": pdf_links
+        }
+
+        return jsonify(response)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == "__main__":
-    app.run(debug=True)
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=5000)  # Make sure to adjust the port if necessary
