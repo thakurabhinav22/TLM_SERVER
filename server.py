@@ -1,6 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
+
+# Enable CORS for all routes
+CORS(app)
 
 # Route to accept the POST request and greet the user
 @app.route('/greet', methods=['POST'])
