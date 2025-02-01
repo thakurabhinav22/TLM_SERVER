@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, request, jsonify
 import requests
 from googlesearch import search
 
@@ -14,9 +14,8 @@ def search_pdfs(topic, author=None, keywords=None):
 
     print(f"Searching for PDFs with query: {query}")
 
-    # Using a loop to get a fixed number of results instead of 'num'
     pdf_links = []
-    for result in search(query):  # Default fetches results iteratively
+    for result in search(query):  # Fetch search results iteratively
         if result.endswith(".pdf"):
             pdf_links.append(result)
         if len(pdf_links) >= 5:  # Limit to 5 results manually
@@ -24,20 +23,25 @@ def search_pdfs(topic, author=None, keywords=None):
 
     return pdf_links
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    pdf_links = []
+# API Endpoint to handle search
+@app.route('/search', methods=['POST'])
+def search_api():
+    data = request.get_json()  # Get JSON data from POST request
+
+    # Validate required fields
+    if not data or 'topic' not in data:
+        return jsonify({"error": "Topic is required"}), 400
+
+    topic = data['topic']
+    author = data.get('author', '')  # Optional field
+    keywords = data.get('keywords', '')
+
+    keywords_list = [kw.strip() for kw in keywords.split(",")] if keywords else None
     
-    if request.method == 'POST':
-        topic = request.form['topic']
-        author = request.form.get('author', '')
-        keywords = request.form.get('keywords', '')
+    # Get PDF search results
+    pdf_links = search_pdfs(topic, author, keywords_list)
 
-        keywords_list = [kw.strip() for kw in keywords.split(",")] if keywords else None
-        
-        pdf_links = search_pdfs(topic, author, keywords_list)
-
-    return render_template('index.html', pdf_links=pdf_links)
+    return jsonify({"topic": topic, "pdf_links": pdf_links})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
